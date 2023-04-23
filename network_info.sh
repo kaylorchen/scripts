@@ -34,6 +34,27 @@ print_ip() {
     echo_green "+++print_ip of $1+++\n"
     print_route_table $1
   fi
+}
+
+ping_check() {
+  ping -c 3 -w 3 $1 &>/dev/null
+  if [ "$?" == "0" ]; then
+    echo $1 is UP
+  else
+    echo $1 is DOWN
+  fi
+}
+
+check_connection() {
+  count=$(ip route | grep default | wc -l)
+  echo "The PC has $count default gateway(s)"
+  gateway=$(ip route | grep default | awk -F 'via ' '{print $2}' | awk -F ' ' '{print $1}')
+  if [ $count -ge 1 ]; then
+    for line in $gateway; do
+      echo "gateway: $line"
+      ping_check $line
+    done
+  fi
 
 }
 
@@ -45,3 +66,5 @@ for line in $dev_list; do
   print_ip $line
   echo_sky_blue "-------------end-----------------\n"
 done
+
+check_connection
